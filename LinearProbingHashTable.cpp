@@ -1,41 +1,102 @@
 #include "LinearProbingHashTable.h"
 using namespace std;
 
-LinearProbingHashTable::LinearProbingHashTable(HashFunction<string> hashFn) {
-    /* TODO: Delete this comment and the next line, then implement this function. */
-    (void) hashFn;
+
+
+LinearProbingHashTable::LinearProbingHashTable(HashFunction<string> hashFn)
+    : hashFn(hashFn), capacity(hashFn.numSlots()), numElems(0) {
+    elems = new Slot[capacity];
+    for (int i = 0; i < capacity; i++) {
+        elems[i].type = SlotType::EMPTY;
+        elems[i].value = "";
+    }
 }
+
 
 LinearProbingHashTable::~LinearProbingHashTable() {
-    /* TODO: Delete this comment, then implement this function. */
+    delete[] elems;
+    elems = nullptr;
 }
+
 
 int LinearProbingHashTable::size() const {
-    /* TODO: Delete this comment and the next lines, then implement this function. */
-    return -1;
+    return numElems;
 }
+
 
 bool LinearProbingHashTable::isEmpty() const {
-    /* TODO: Delete this comment and the next lines, then implement this function. */
+    return numElems == 0;
+}
+
+
+bool LinearProbingHashTable::insert(const string& key) {
+    if (numElems == capacity) return false;
+
+    int startIndex = hashFn(key) % capacity;
+    int tombstoneIndex = -1;
+
+
+    for (int i = 0; i < capacity; i++) {
+        int idx = (startIndex + i) % capacity;
+        Slot& slot = elems[idx];
+
+        if (slot.type == SlotType::FILLED) {
+            if (slot.value == key) return false;
+        } else if (slot.type == SlotType::TOMBSTONE) {
+            if (tombstoneIndex == -1) tombstoneIndex = idx;
+        } else if (slot.type == SlotType::EMPTY) {
+            int insertPos = (tombstoneIndex != -1) ? tombstoneIndex : idx;
+            elems[insertPos].value = key;
+            elems[insertPos].type = SlotType::FILLED;
+            numElems++;
+            return true;
+        }
+    }
+
+
+    if (tombstoneIndex != -1) {
+        elems[tombstoneIndex].value = key;
+        elems[tombstoneIndex].type = SlotType::FILLED;
+        numElems++;
+        return true;
+    }
+
     return false;
 }
 
-bool LinearProbingHashTable::insert(const string& elem) {
-    /* TODO: Delete this comment and the next lines, then implement this function. */
-    (void) elem;
+
+bool LinearProbingHashTable::contains(const string& key) const {
+    int startIndex = hashFn(key) % capacity;
+
+    for (int i = 0; i < capacity; i++) {
+        int idx = (startIndex + i) % capacity;
+        const Slot& slot = elems[idx];
+
+        if (slot.type == SlotType::EMPTY) return false;
+        if (slot.type == SlotType::FILLED && slot.value == key) return true;
+    }
+
     return false;
 }
 
-bool LinearProbingHashTable::contains(const string& elem) const {
-    /* TODO: Delete this comment and the next lines, then implement this function. */
-    (void) elem;
+
+bool LinearProbingHashTable::remove(const string& key) {
+    int startIndex = hashFn(key) % capacity;
+
+    for (int i = 0; i < capacity; i++) {
+        int idx = (startIndex + i) % capacity;
+        Slot& slot = elems[idx];
+
+        if (slot.type == SlotType::EMPTY) return false;
+        if (slot.type == SlotType::FILLED && slot.value == key) {
+            slot.type = SlotType::TOMBSTONE;
+            numElems--;
+            return true;
+        }
+    }
+
     return false;
 }
-
-bool LinearProbingHashTable::remove(const string& elem) {
-    /* TODO: Delete this comment and the next lines, then implement this function. */
-    (void) elem;
-    return false;
 }
 
 

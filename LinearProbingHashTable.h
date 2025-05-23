@@ -13,22 +13,36 @@ public:
      * as the argument. (Note that the hash function lets you determine how
      * many slots to use; you can get this by calling hashFn.numSlots().)
      */
-    LinearProbingHashTable(HashFunction<std::string> hashFn);
+    LinearProbingHashTable(HashFunction<std::string> hashFn){
+    allocatedSize=hashFn.numSlots();
+    elems=new Slot[allocatedSize];
+    for(int i=0;i<allocatedSize;i++){
+        elems[i].distance=EMPTY_SLOT;
+    }
+    this->hashFn=hashFN;
+    }
 
     /**
      * Cleans up all memory allocated by this hash table.
      */
-    ~LinearProbingHashTable();
+    ~LinearProbingHashTable() {
+        delete[] elems;
+    }
 
     /**
      * Returns whether the table is empty.
      */
-    bool isEmpty() const;
+    bool isEmpty() const {
+        if(logicalSize==0)return true;
+        return false;
+    }
 
     /**
      * Returns the number of elements in the table.
      */
-    int size() const;
+    int size() const {
+        return logicalSize;
+    }
 
     /**
      * Inserts the specified element into this hash table. If the element already
@@ -40,12 +54,45 @@ public:
      *
      * This function returns whether the element was inserted into the table.
      */
-    bool insert(const std::string& key);
+    bool insert(const std::string& key){
+        if(contains(key) || logicalSize == allocatedSize){
+            return false;
+        }
+        int flag=0;
+        int pos=hashFN(key);
+        while(1){
+            if(elems[pos].type==SlotType::EMPTY ||)
+        }
+    }
 
     /**
      * Returns whether the specified key is contained in this hash tasble.
      */
-    bool contains(const std::string& key) const;
+    bool contains(const std::string& key) const {
+        int pos=hashFn(key);
+        int flag=0;
+        int count=0;
+        while(count<allocatedSize){
+            if (elems[pos].type==SlotType::FILLED){
+                if(elems[pos].value==key){
+                    flag=1;
+                    break;
+                }
+            }
+            else if(elems[pos].type==SlotType::EMPTY){
+                return false;
+            }
+            if(pos==allocatedSize-1)
+            {
+                count++;
+                pos=0;
+            }else{
+                count++;
+                pos++;
+            }
+    }
+        if(flag==1)return true;
+        return false;
 
     /**
      * Removes the specified element from this hash table. If the element is not
